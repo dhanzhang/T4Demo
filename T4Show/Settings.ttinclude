@@ -6,7 +6,6 @@
 <#@ assembly name="System.Xml" #>
 <#@ assembly name="System.Configuration" #>
 <#@ assembly name="System.Numerics" #>
- 
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Data" #>
 <#@ import namespace="System.Data.SqlClient" #>

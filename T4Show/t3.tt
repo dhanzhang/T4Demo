@@ -1,6 +1,5 @@
 ﻿<#@ template language="C#" #>
 using System;
-
 public class <#= this.ClassName #>
 {
     public static void HelloPot()

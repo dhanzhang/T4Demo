@@ -82,9 +82,7 @@ using System.Numerics;
 		   /// <summary>
           /// <#= tc.Memo  #>
           /// </summary>
-		   public   <#=   tc.DotNetType  #>   <#= tc.Name #>{ get ;set ;}
-
-		 
+		   public   <#=   tc.DotNetType  #>   <#= tc.Name #>{ get ;set ;}		 
 		<#} #>
 
 	  }
