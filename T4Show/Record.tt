@@ -1,0 +1,95 @@
+﻿<#@ include file="Settings.ttinclude" #>
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data;
+using System.Linq.Expressions;
+using System.Collections;
+using System.ComponentModel;
+using System.Data.Common;
+using System.Data.SqlClient;
+using System.Numerics;
+
+ namespace   <#= NameSpace #>{
+ 
+   public   abstract class   <#=NameSpace #>Settings{
+      
+	     public  static  string CnnString{
+		    get { 
+			    return  @"Data Source=dbserver;Initial Catalog=mainaer;User ID=sa;Password=P@ssword" ;
+			}
+		 }
+          
+   }
+ 
+<#
+    
+
+
+    List<Tab> tabs = LoadTables();
+	foreach(Tab t in tabs){#>
+	  public  class  <#= t.TableName #>{
+	  [Flags]
+	  public  enum  <#=t.TableName #>Columns:ulong {
+	       None=0,
+		   <# var len=t.Cols.Count();
+		        for(var j=0;j<len ;j++){
+				var tc=t.Cols[j] ;	
+				if( j != len -1 ){	#>
+				     <#= tc.Name #>=<#=string.Format("0x{0:X}",(ulong)Math.Pow(2,j))#>,
+				<# } else {#>
+				      <#= tc.Name #>=<#=string.Format("0x{0:X}",(ulong)Math.Pow(2,j))#>
+
+				<#}#>
+
+	     <#}#>
+	  }
+
+	  const  string  __TableName=@"<#= t.TableName #>";
+	  static  readonly  Dictionary<<#=t.TableName #>Columns,string>  __TableCols;
+	  static   <#= t.TableName #>(){
+	         __TableCols=new Dictionary<<#=t.TableName #>Columns,String>(<#= t.Cols.Count() #>);
+			<# foreach(var tc in t.Cols ){#>
+		         __TableCols.Add(<#=t.TableName #>Columns.<#=tc.Name#>,"<#=tc.Name#>");
+		    <#}#>
+	  }
+	  public   void     Add(){
+	    
+			     
+			  
+	  }
+	  public   static  <#= t.TableName #>   Create<#= t.TableName#>FromDataRecord(IDataRecord dr){
+	     <#= t.TableName #>  ent=new <#= t.TableName #>();
+		 <# foreach(var  tc in t.Cols ){ #>
+		      <# if  (tc.DotNetType=="string"  ){ #>
+			       ent.<#=tc.Name#>=  dr.IsDBNull(dr.GetOrdinal("<#=tc.Name #>")) ?string.Empty:(string)dr["<#=tc.Name#>"];
+			  <# } else  if( tc.DotNetType=="object"  ) {#>
+		           ent.<#=tc.Name#>= dr["<#=tc.Name#>"];
+			   <#} else{#>
+			       ent.<#=tc.Name#>=  dr.IsDBNull(dr.GetOrdinal("<#=tc.Name #>")) ?default(<#= tc.DotNetType #>):(<#=tc.DotNetType#>)dr["<#=tc.Name#>"];
+			   <#}#> 
+		 <#}#>
+
+
+		 return   ent ;
+
+
+	  }
+	  <#    
+	    foreach(var  tc in t.Cols ){#>
+		   /// <summary>
+          /// <#= tc.Memo  #>
+          /// </summary>
+		   public   <#=   tc.DotNetType  #>   <#= tc.Name #>{ get ;set ;}
+
+		 
+		<#} #>
+
+	  }
+    <#}
+	#>
+
+	}
+ 

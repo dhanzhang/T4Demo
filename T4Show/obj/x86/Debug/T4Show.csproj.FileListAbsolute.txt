@@ -1,0 +1,6 @@
+E:\dhanzhang\Documents\Visual Studio 2010\Projects\T4Show\T4Show\obj\x86\Debug\ResolveAssemblyReference.cache
+E:\dhanzhang\Documents\Visual Studio 2010\Projects\T4Show\T4Show\bin\Debug\T4Show.exe.config
+E:\dhanzhang\Documents\Visual Studio 2010\Projects\T4Show\T4Show\bin\Debug\T4Show.exe
+E:\dhanzhang\Documents\Visual Studio 2010\Projects\T4Show\T4Show\bin\Debug\T4Show.pdb
+E:\dhanzhang\Documents\Visual Studio 2010\Projects\T4Show\T4Show\obj\x86\Debug\T4Show.exe
+E:\dhanzhang\Documents\Visual Studio 2010\Projects\T4Show\T4Show\obj\x86\Debug\T4Show.pdb

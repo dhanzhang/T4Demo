@@ -1,0 +1,174 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output encoding="utf-8"  extension=".cs" #>
+<#@ assembly name="EnvDTE" #>
+<#@ assembly name="System.Core.dll" #>
+<#@ assembly name="System.Data" #>
+<#@ assembly name="System.Xml" #>
+<#@ assembly name="System.Configuration" #>
+<#@ assembly name="System.Numerics" #>
+ 
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Data" #>
+<#@ import namespace="System.Data.SqlClient" #>
+<#@ import namespace="System.Data.Common" #>
+<#@ import namespace="System.Diagnostics" #>
+<#@ import namespace="System.Globalization" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+<#@ import namespace="System.Configuration" #>
+<#@ import namespace="System.Numerics" #>
+
+
+<#+
+string ConnectionString=@"Data Source=dbserver;Initial Catalog=mainaer;User ID=sa;Password=P@ssword" ;
+string NameSpace="MneData";
+string  columnTSQL="SELECT   COLUMN_NAME AS ColumnName,IS_NULLABLE AS IsNullable, "
++"     DotNetType=	case   LOWER(DATA_TYPE ) "
++"     when   'bigint' then 'long' "
+ +"    when   'binary' then 'byte[]'"
+ +"    when   'bit'    then 'bool'"
++"     when   'char'   then 'string'"
++"     when   'date'   then 'DateTime'"
++"     when   'datetime' then 'DateTime'"
++"     when   'datetime2' then 'DateTim2'"
++"     when   'datetimeoffset' then 'DateTimeOffset'"
++"     when   'decimal'   then 'decimal'"
++"     when   'float'     then 'double'"
++"     when   'image'     then 'byte[]'"
+ +"    when   'int'       then 'int'"
+ +"    when   'money'     then 'decimal'"
++"     when   'nchar'     then 'string'"
++"     when   'ntext'     then 'string'"
++"     when    'numeric'   then 'decimal'"
+ +"    when    'nvarchar'  then 'string'"
++"     when    'real'      then 'Single'"
++"    when    'rowversion'  then 'byte[]'"
+ +"    when    'smalldatetime' then 'DateTime'"
+ +"    when    'smallint'   then 'Int16'"
+  +"   when    'smallmoney'  then 'decimal'"
+  +"   when    'sql_variant'  then  'object'"
+  +"   when    'text'  then 'string'"
+ +"    when    'time' then  'TimeSpan'"
+ +"    when     'timestamp' then 'byte[]'"
+ +"    when    'tinyint' then 'byte'"
+ +"    when     'uniqueidentifier' then 'Guid'"
+ +"    when     'varbinary'  then 'byte[]'"
+ +"    when     'varchar' then 'string'"
+ +"    when     'xml'  then 'Xml'"
+  +"   when     'sysname' then 'string'"
+ +"    else 'Object'"
+ +"    end,	COLUMNPROPERTY(object_id(@tabName), COLUMN_NAME, 'IsIdentity') AS IsIdentity,Memo=(Select value  From  sys.extended_properties where major_id=OBJECT_ID(@tabName) and minor_id =  ORDINAL_POSITION  and name='MS_Description')    FROM  INFORMATION_SCHEMA.COLUMNS    WHERE TABLE_NAME=@tabName";
+
+IDataReader GetReader(string sql){
+    SqlConnection conn=new SqlConnection(ConnectionString);
+    SqlCommand cmd=new SqlCommand(sql,conn);
+    conn.Open();
+    return cmd.ExecuteReader(CommandBehavior.CloseConnection);
+}
+SqlCommand GetCommand(string sql){
+    SqlConnection conn=new SqlConnection(ConnectionString);
+    SqlCommand cmd=new SqlCommand(sql,conn);
+    conn.Open();
+    return cmd;
+}
+string GetSysType(string sqlType){
+	string sysType="string";
+	switch (sqlType) {
+		case "bigint":
+			sysType = "long";
+			break;
+		case "smallint":
+			sysType= "short";
+			break;
+		case "int":
+			sysType= "int";
+			break;
+		case "uniqueidentifier":
+			sysType=  "Guid";
+			 break;
+		case "smalldatetime":
+		case "datetime":
+		case "date":
+			sysType=  "DateTime";
+			  break;
+		case "float":
+			sysType="double";
+			break;
+		case "real":
+		case "numeric":
+		case "smallmoney":
+		case "decimal":
+		case "money":
+			sysType=  "decimal";
+			 break;
+		case "tinyint":
+			sysType = "byte";
+			break;
+		case "bit":
+			sysType=  "bool";
+			   break;
+		case "image":
+		case "binary":
+		case "varbinary":
+		case "timestamp":
+			sysType=  "byte[]";
+			 break;
+	}
+	return sysType;
+}
+public  class   TabCol{
+ 
+   public  string  DotNetType;
+   public  string  Name ;
+   public  string  Memo;
+   public   bool   IsAllowNull;
+   public  bool    IsIdentity;
+}
+public  class Tab{
+    public  string  TableName ;
+	public  List<TabCol> Cols;
+}
+
+List<Tab>  LoadTables(){
+       List<Tab> res=new List<Tab>(20);
+        using(IDataReader rdr=GetReader(@"Select Name From Sys.objects Where Type='U'  and CHARINDEX('Mne',Name,1)=1  and Name<>N'MneProduct'  ")){
+        while(rdr.Read()){	     
+		     Tab t=new Tab();
+			 t.TableName=(string)rdr[0] ;
+			 res.Add(t);
+        }
+		rdr.Close();
+		foreach(Tab t in   res){
+		     t.Cols= LoadCol( t.TableName );
+		}
+    }
+	return   res ;
+}
+List<TabCol>  LoadCol(string tabName){
+		var  result=new List<TabCol>(40);
+		
+		var cmd=GetCommand(columnTSQL);
+		cmd.Parameters.AddWithValue("@tabName",tabName);
+		using(IDataReader rdr=cmd.ExecuteReader(CommandBehavior.CloseConnection)){
+				while(rdr.Read()){
+						TabCol col=new TabCol();
+						col.Name =(string)rdr[0];
+	 				    col.DotNetType=(string)rdr[2]; 
+					    col.IsAllowNull=string.Format("{0}",rdr[1] ) =="YES" ? true:false;
+					    col.IsIdentity=string.Format("{0}",rdr[3] ) =="1" ? true:false;
+						col.Memo=string.Format("{0}",rdr[4]) ;
+						result.Add(col);
+				}
+				rdr.Close();
+		}
+		return result;
+}
+
+
+
+ 
+
+ 
+#>
